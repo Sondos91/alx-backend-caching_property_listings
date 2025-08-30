@@ -2,7 +2,9 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.core.cache import cache
 from django.utils import timezone
+from django.views.decorators.cache import cache_page
 from .models import Property
+from .utils import get_all_properties, get_redis_cache_metrics
 import json
 
 
@@ -30,25 +32,12 @@ def test_cache(request):
     return JsonResponse(data)
 
 
+@cache_page(60 * 15)  # Cache for 15 minutes
 def property_list(request):
-    """List all properties with caching"""
-    cache_key = 'property_list_cache'
-    
-    # Try to get from cache first
-    cached_properties = cache.get(cache_key)
-    
-    if cached_properties is None:
-        # If not in cache, fetch from database
-        properties = Property.objects.all().values('id', 'title', 'price', 'location', 'created_at')
-        cached_properties = list(properties)
-        # Cache for 300 seconds (5 minutes)
-        cache.set(cache_key, cached_properties, 300)
-        source = 'database'
-    else:
-        source = 'cache'
+    """List all properties with page-level caching"""
+    properties = Property.objects.all().values('id', 'title', 'price', 'location', 'created_at')
     
     return JsonResponse({
-        'properties': cached_properties,
-        'source': source,
-        'count': len(cached_properties)
+        'properties': list(properties),
+        'count': len(properties)
     })
