@@ -34,10 +34,20 @@ def test_cache(request):
 
 @cache_page(60 * 15)  # Cache for 15 minutes
 def property_list(request):
-    """List all properties with page-level caching"""
-    properties = Property.objects.all().values('id', 'title', 'price', 'location', 'created_at')
+    """List all properties with page-level caching and low-level queryset caching"""
+    # Use the low-level cached queryset function
+    properties = get_all_properties()
+    
+    # Convert to list of dictionaries for JSON serialization
+    properties_data = list(properties.values('id', 'title', 'price', 'location', 'created_at'))
     
     return JsonResponse({
-        'properties': list(properties),
-        'count': len(properties)
+        'properties': properties_data,
+        'count': len(properties_data)
     })
+
+
+def cache_metrics(request):
+    """Get Redis cache performance metrics"""
+    metrics = get_redis_cache_metrics()
+    return JsonResponse(metrics)

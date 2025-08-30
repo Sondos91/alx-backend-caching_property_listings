@@ -6,4 +6,5 @@ app_name = 'properties'
 urlpatterns = [
     path('', views.property_list, name='property_list'),
     path('test-cache/', views.test_cache, name='test_cache'),
+    path('cache-metrics/', views.cache_metrics, name='cache_metrics'),
 ]
